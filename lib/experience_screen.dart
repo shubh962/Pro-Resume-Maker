@@ -145,6 +145,8 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
       _endCtrl.clear();
       _detailsCtrl.clear();
     }
+    // Track if currently working here
+    bool _isPresent = _endCtrl.text.trim().isEmpty;
 
     showModalBottomSheet(
       context: context,
@@ -207,10 +209,42 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       _label("End Date"),
-                      _dateField(_endCtrl, "Present", () async {
-                        await _pickMonthYear(_endCtrl);
-                        setS(() {});
-                      }),
+                      if (!_isPresent)
+                        _dateField(_endCtrl, "MMM YYYY", () async {
+                          await _pickMonthYear(_endCtrl);
+                          setS(() {});
+                        })
+                      else
+                        Container(
+                          height: 50,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.green.shade300),
+                          ),
+                          child: Text("Present",
+                            style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+                        ),
+                      const SizedBox(height: 6),
+                      // Currently working toggle
+                      GestureDetector(
+                        onTap: () => setS(() {
+                          _isPresent = !_isPresent;
+                          if (_isPresent) _endCtrl.clear();
+                        }),
+                        child: Row(children: [
+                          Icon(
+                            _isPresent ? Icons.check_box : Icons.check_box_outline_blank,
+                            color: _isPresent ? const Color(0xFF1565C0) : Colors.grey,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          const Text("Currently working here",
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ]),
+                      ),
                     ])),
                   ]),
                   const SizedBox(height: 14),
@@ -346,7 +380,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
                         Text(e['company'] ?? '', style: const TextStyle(fontSize: 13)),
                         if ((e['start'] ?? '').isNotEmpty || (e['end'] ?? '').isNotEmpty)
                           Text(
-                            "${e['start'] ?? ''}  –  ${e['end']?.isNotEmpty == true ? e['end'] : 'Present'}",
+                            "${e['start'] ?? ''}  -  ${e['end']?.isNotEmpty == true ? e['end'] : 'Present'}",
                             style: const TextStyle(fontSize: 11, color: Colors.grey),
                           ),
                       ],

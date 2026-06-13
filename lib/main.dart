@@ -4,6 +4,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'home_screen.dart';
 import 'resume_data.dart';
 import 'app_constants.dart';
+import 'notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,7 @@ void main() async {
   }
 
   await ResumeData().loadAllResumes();
+  await NotificationService.instance.init();
   runApp(const ResumeMakerApp());
 }
 

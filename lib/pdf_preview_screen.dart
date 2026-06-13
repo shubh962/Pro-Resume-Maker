@@ -24,11 +24,11 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     {"name": "Modern Blue",    "desc": "Bold header, two-tone",       "icon": Icons.dashboard_outlined,         "color": const Color(0xFF1565C0)},
     {"name": "Sidebar Dark",   "desc": "Two-column, dark panel",      "icon": Icons.view_sidebar_outlined,      "color": const Color(0xFF1A1A2E)},
     {"name": "Executive",      "desc": "Black & gold accent",         "icon": Icons.workspace_premium_outlined, "color": const Color(0xFFB8860B)},
-    {"name": "Minimal Line",   "desc": "Typography-first",            "icon": Icons.text_fields,                "color": const Color(0xFF212121)},
     {"name": "Emerald Split",  "desc": "Green accent, split layout",  "icon": Icons.eco_outlined,               "color": const Color(0xFF00695C)},
     {"name": "Slate Column",   "desc": "Two-col, slate grey sidebar", "icon": Icons.view_column_outlined,       "color": const Color(0xFF455A64)},
     {"name": "Crimson Edge",   "desc": "Left accent bar, bold name",  "icon": Icons.format_paint_outlined,      "color": const Color(0xFFC62828)},
     {"name": "Navy Timeline",  "desc": "Timeline dots, navy accent",  "icon": Icons.timeline,                   "color": const Color(0xFF0D2137)},
+    {"name": "Clean ATS Pro",  "desc": "One-page, plain & ATS-safe",  "icon": Icons.document_scanner_outlined,  "color": const Color(0xFF212121)},
   ];
 
   @override
@@ -330,7 +330,18 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   // ================================================================
   String _clean(String? t) {
     if (t == null || t.trim().isEmpty) return "";
-    return t.replaceAll(RegExp(r'[☑✔☐^]'), '').trim();
+    return t
+        .replaceAll(RegExp(r'[☑✔☐^]'), '')
+        .replaceAll('\u2013', '-')   // en dash –
+        .replaceAll('\u2014', '-')   // em dash —
+        .replaceAll('\u2012', '-')   // figure dash
+        .replaceAll('\u2015', '-')   // horizontal bar
+        .replaceAll('\u2010', '-')   // hyphen
+        .replaceAll('\u2011', '-')   // non-breaking hyphen
+        .replaceAll('\u00b7', '')    // middle dot
+        .replaceAll(RegExp(r'[\u{1F300}-\u{1FABF}]', unicode: true), '')  // emoji
+        .replaceAll(RegExp(r'[\u{2600}-\u{27BF}]', unicode: true), '')   // symbols/emoji
+        .trim();
   }
 
   /// Builds the contact line including LinkedIn and website if present
@@ -364,11 +375,11 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
       case 1: return _buildModernBlue(pdf, d, r, b, i);
       case 2: return _buildSidebarDark(pdf, d, r, b, i);
       case 3: return _buildExecutive(pdf, d, r, b, i);
-      case 4: return _buildMinimalLine(pdf, d, r, b, i);
-      case 5: return _buildEmeraldSplit(pdf, d, r, b, i);
-      case 6: return _buildSlateColumn(pdf, d, r, b, i);
-      case 7: return _buildCrimsonEdge(pdf, d, r, b, i);
-      case 8: return _buildNavyTimeline(pdf, d, r, b, i);
+      case 4: return _buildEmeraldSplit(pdf, d, r, b, i);
+      case 5: return _buildSlateColumn(pdf, d, r, b, i);
+      case 6: return _buildCrimsonEdge(pdf, d, r, b, i);
+      case 7: return _buildNavyTimeline(pdf, d, r, b, i);
+      case 8: return _buildCleanAtsPro(pdf, d, r, b, i);
       default: return _buildClassicPro(pdf, d, r, b, i);
     }
   }
@@ -405,16 +416,21 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
       return _sBlock("EXPERIENCE", accentColor, dividerColor, titleFontSize, b,
         pw.Column(children: d.experienceList.map((e) {
           final start   = _clean(e['start'] ?? e['startDate']);
-          final end     = _clean(e['end']   ?? e['endDate'] ?? "Present");
+          final rawEnd  = _clean(e['end']   ?? e['endDate'] ?? '');
+          final end     = rawEnd.isEmpty ? 'Present' : rawEnd;
           final details = _clean(e['details'] ?? e['description']);
           final company = _clean(e['company']);
           final job     = _clean(e['job']);
+          // Build date string: only show if start or end exists
+          final dateStr = (start.isEmpty && end == 'Present') ? '' :
+                          start.isEmpty ? end :
+                          end.isEmpty   ? start : '$start - $end';
           return pw.Padding(padding: const pw.EdgeInsets.only(bottom: 12),
             child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
               pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                 pw.Expanded(child: pw.Text(company, style: pw.TextStyle(font: b, fontSize: fontSize))),
-                if (start.isNotEmpty || end.isNotEmpty)
-                  pw.Text("$start${end.isNotEmpty ? ' – $end' : ''}",
+                if (dateStr.isNotEmpty)
+                  pw.Text(dateStr,
                     style: pw.TextStyle(font: r, fontSize: fontSize - 1, color: PdfColors.grey600)),
               ]),
               if (job.isNotEmpty)
@@ -974,7 +990,14 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
           pw.Column(children: d.experienceList.map((e) => _timelineEntry(
             title: _clean(e['company']),
             subtitle: _clean(e['job']),
-            date: "${_clean(e['start'] ?? e['startDate'])} – ${_clean(e['end'] ?? e['endDate'] ?? 'Present')}",
+            date: () {
+              final s = _clean(e['start'] ?? e['startDate'] ?? '');
+              final rawE = _clean(e['end'] ?? e['endDate'] ?? '');
+              final en = rawE.isEmpty ? 'Present' : rawE;
+              if (s.isEmpty && en == 'Present') return '';
+              if (s.isEmpty) return en;
+              return '$s - $en';
+            }(),
             body: _clean(e['details'] ?? e['description']),
             r: r, b: b, i: i, dot: accentColor,
           )).toList()));
@@ -1076,6 +1099,140 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
     padding: const pw.EdgeInsets.only(bottom: 4),
     child: pw.Text(text, style: pw.TextStyle(font: r, fontSize: 8.5, color: PdfColors.white)),
   );
+  // ================================================================
+  // 9 — CLEAN ATS PRO  (matches uploaded one-page plain resume style)
+  // Pure Helvetica, no color blocks, maximum ATS compatibility
+  // ================================================================
+  Future<Uint8List> _buildCleanAtsPro(pw.Document pdf, ResumeData d, pw.Font r, pw.Font b, pw.Font i) async {
+    const black  = PdfColors.black;
+    const grey6  = PdfColors.grey600;
+    const grey8  = PdfColors.grey800;
+    const divClr = PdfColors.grey400;
+
+    // ── helpers ──────────────────────────────────────────────────
+    pw.Widget _section(String title, pw.Widget content) {
+      return pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+        pw.SizedBox(height: 12),
+        pw.Text(title.toUpperCase(),
+          style: pw.TextStyle(font: b, fontSize: 10.5, color: black, letterSpacing: 1.2)),
+        pw.Container(height: 0.8, color: black, margin: const pw.EdgeInsets.only(top: 3, bottom: 7)),
+        content,
+      ]);
+    }
+
+    pw.Widget _expEntry(Map e) {
+      final company = _clean(e['company']);
+      final job     = _clean(e['job']);
+      final start   = _clean(e['start'] ?? e['startDate'] ?? '');
+      final rawEnd  = _clean(e['end'] ?? e['endDate'] ?? '');
+      final end     = rawEnd.isEmpty ? 'Present' : rawEnd;
+      final dateStr = start.isEmpty ? end : '$start - $end';
+      final details = _clean(e['details'] ?? e['description']);
+      return pw.Padding(padding: const pw.EdgeInsets.only(bottom: 9), child:
+        pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+          pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+            pw.Expanded(child: pw.RichText(text: pw.TextSpan(children: [
+              pw.TextSpan(text: company, style: pw.TextStyle(font: b, fontSize: 10)),
+              if (job.isNotEmpty) pw.TextSpan(text: '  |  $job',
+                style: pw.TextStyle(font: i, fontSize: 9.5, color: grey8)),
+            ]))),
+            if (dateStr.isNotEmpty)
+              pw.Text(dateStr, style: pw.TextStyle(font: r, fontSize: 9, color: grey6)),
+          ]),
+          if (details.isNotEmpty) ...[pw.SizedBox(height: 3), _bullets(details, r, fontSize: 9)],
+        ]));
+    }
+
+    pw.Widget _eduEntry(Map e) {
+      final school = _clean(e['school'] ?? e['college']);
+      final course = _clean(e['course']);
+      final year   = _clean(e['year']);
+      final score  = _clean(e['score']);
+      return pw.Padding(padding: const pw.EdgeInsets.only(bottom: 8), child:
+        pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+          pw.Expanded(child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+            pw.Text(school, style: pw.TextStyle(font: b, fontSize: 10)),
+            if (course.isNotEmpty) pw.Text(course, style: pw.TextStyle(font: r, fontSize: 9.5, color: grey8)),
+            if (score.isNotEmpty)  pw.Text('Score: $score', style: pw.TextStyle(font: r, fontSize: 9, color: grey6)),
+          ])),
+          if (year.isNotEmpty) pw.Text(year, style: pw.TextStyle(font: r, fontSize: 9, color: grey6)),
+        ]));
+    }
+
+    // ── build sections list ──────────────────────────────────────
+    final List<pw.Widget> sections = [];
+    for (final s in d.sectionOrder) {
+      if (d.sectionStatus[s] == false) continue;
+      switch (s) {
+        case 'Objective':
+          if (_clean(d.objective).isNotEmpty)
+            sections.add(_section('Professional Summary',
+              pw.Text(_clean(d.objective),
+                style: pw.TextStyle(font: r, fontSize: 9.5, lineSpacing: 2),
+                textAlign: pw.TextAlign.justify)));
+          break;
+        case 'Experience':
+          if (d.experienceList.isNotEmpty)
+            sections.add(_section('Work Experience',
+              pw.Column(children: d.experienceList.map(_expEntry).toList())));
+          break;
+        case 'Education':
+          if (d.educationList.isNotEmpty)
+            sections.add(_section('Education',
+              pw.Column(children: d.educationList.map(_eduEntry).toList())));
+          break;
+        default:
+          final w = _buildSection(s, d, r, b, i,
+            accentColor: black, dividerColor: divClr, fontSize: 9.5, titleFontSize: 10);
+          if (w != null) sections.add(w);
+      }
+    }
+
+    // ── page ─────────────────────────────────────────────────────
+    pdf.addPage(pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.symmetric(horizontal: 48, vertical: 38),
+      build: (ctx) => [
+        // Name block
+        pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+          pw.Text(_clean(d.name).toUpperCase(),
+            style: pw.TextStyle(font: b, fontSize: 22, color: black, letterSpacing: 2.0)),
+          if (_clean(d.jobTitle).isNotEmpty) ...[
+            pw.SizedBox(height: 3),
+            pw.Text(_clean(d.jobTitle),
+              style: pw.TextStyle(font: i, fontSize: 11, color: grey8, letterSpacing: 0.5)),
+          ],
+          pw.SizedBox(height: 5),
+          pw.Container(height: 1, color: black),
+          pw.SizedBox(height: 4),
+          // Contact line — all items separated by •
+          pw.Wrap(spacing: 0, children: () {
+            final items = <String>[];
+            if (_clean(d.address).isNotEmpty)  items.add(_clean(d.address));
+            if (_clean(d.phone).isNotEmpty)    items.add(_clean(d.phone));
+            if (_clean(d.email).isNotEmpty)    items.add(_clean(d.email));
+            if (_clean(d.linkedin).isNotEmpty) items.add(_clean(d.linkedin));
+            if (_clean(d.website).isNotEmpty)  items.add(_clean(d.website));
+            final widgets = <pw.Widget>[];
+            for (int idx = 0; idx < items.length; idx++) {
+              widgets.add(pw.Text(items[idx],
+                style: pw.TextStyle(font: r, fontSize: 9, color: grey8)));
+              if (idx < items.length - 1)
+                widgets.add(pw.Text('  |  ',
+                  style: pw.TextStyle(font: r, fontSize: 9, color: grey6)));
+            }
+            return widgets;
+          }()),
+          pw.SizedBox(height: 2),
+          pw.Container(height: 0.5, color: divClr),
+        ]),
+        ...sections,
+      ],
+    ));
+    return pdf.save();
+  }
+
+
 }
 
 class _AtsPoint extends StatelessWidget {

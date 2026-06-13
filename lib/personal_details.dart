@@ -32,7 +32,7 @@ class _PersonalDetailsState extends State<PersonalDetails> {
 
   Future<void> _pickImage() async {
     final p = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (p != null) setState(() => _imagePath = p.path);
+    if (p != null && mounted) setState(() => _imagePath = p.path);
   }
 
   Future<void> _save() async {

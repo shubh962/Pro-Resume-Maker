@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'app_constants.dart';
+import 'notification_service.dart';
 import 'resume_data.dart';
 
 // ================================================================
@@ -64,6 +65,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _nameCtrl.text    = _displayName;
       _taglineCtrl.text = _tagline;
     });
+    // Re-schedule daily notification on every app open if enabled
+    if (_notifications) {
+      await NotificationService.instance.scheduleDaily();
+    }
   }
 
   Future<void> _savePrefs() async {
@@ -78,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() => _avatarPath = picked.path);
       await _savePrefs();
     }
@@ -308,18 +313,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // ── PREFERENCES ──
               _sectionHeader("Preferences"),
-              _switchTile(
-                icon: Icons.dark_mode_outlined,
-                color: const Color(0xFF37474F),
-                title: "Dark Mode",
-                subtitle: "Coming soon",
-                value: _darkMode,
-                onChanged: (v) async {
-                  setState(() => _darkMode = v);
-                  await _savePrefs();
-                  // TODO: wire to ThemeMode when dark theme is implemented
-                },
-              ),
+              // Dark mode toggle hidden for V1 — implement in V2
               _switchTile(
                 icon: Icons.notifications_outlined,
                 color: const Color(0xFF4A00E0),
@@ -329,6 +323,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onChanged: (v) async {
                   setState(() => _notifications = v);
                   await _savePrefs();
+                  if (v) {
+                    final granted = await NotificationService.instance.requestPermission();
+                    if (granted) {
+                      await NotificationService.instance.scheduleDaily();
+                    } else {
+                      // Permission denied — revert toggle
+                      if (mounted) setState(() => _notifications = false);
+                      await _savePrefs();
+                    }
+                  } else {
+                    await NotificationService.instance.cancelAll();
+                  }
                 },
               ),
               const SizedBox(height: 20),
@@ -346,21 +352,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.privacy_tip_outlined,
                 color: const Color(0xFF5C6BC0),
                 title: "Privacy Policy",
-                subtitle: AppConstants.privacyPolicyUrl,
                 onTap: () => _openUrl(AppConstants.privacyPolicyUrl),
               ),
               _linkTile(
                 icon: Icons.gavel_outlined,
                 color: const Color(0xFF6D4C41),
                 title: "Terms of Service",
-                subtitle: AppConstants.termsOfServiceUrl,
                 onTap: () => _openUrl(AppConstants.termsOfServiceUrl),
               ),
               _linkTile(
                 icon: Icons.info_outline,
                 color: const Color(0xFF546E7A),
                 title: "About Us",
-                subtitle: AppConstants.aboutUsUrl,
                 onTap: () => _openUrl(AppConstants.aboutUsUrl),
               ),
               const SizedBox(height: 20),
