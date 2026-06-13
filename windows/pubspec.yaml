@@ -1,0 +1,44 @@
+name: resume_maker
+description: "A professional resume maker app."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # PDF
+  pdf: ^3.11.3
+  printing: ^5.14.2
+
+  # Ads
+  google_mobile_ads: ^5.3.1
+
+  # Storage
+  shared_preferences: ^2.5.4
+
+  # Image
+  image_picker: ^1.2.1
+
+  # URL launcher (legal links, social, email)
+  url_launcher: ^6.2.5
+
+  # In-app review (rate app)
+  in_app_review: ^2.0.9
+
+  # Splash & icons (keep if already in project)
+  flutter_native_splash: ^2.4.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
