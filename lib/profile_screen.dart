@@ -361,10 +361,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () => _openUrl(AppConstants.termsOfServiceUrl),
               ),
               _linkTile(
+                icon: Icons.menu_book_outlined,
+                title: 'How to Use',
+                url: 'https://shubh962.github.io/Resumelegal/how-to-use.html'
+              ),
+              _linkTile(
+                icon: Icons.help_outline,
+                title: 'FAQ',
+                url: 'https://shubh962.github.io/Resumelegal/faq.html'
+              ),
+              _linkTile(
                 icon: Icons.info_outline,
                 color: const Color(0xFF546E7A),
                 title: "About Us",
-                onTap: () => _openUrl(AppConstants.aboutUsUrl),
+                url: 'https://shubh962.github.io/Resumelegal/about.html'
               ),
               const SizedBox(height: 20),
 
@@ -454,16 +464,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+    
   }
 
   Widget _linkTile({
     required IconData icon,
-    required Color color,
+    Color? color,
     required String title,
     String? subtitle,
-    required VoidCallback onTap,
+    String? url,
+    VoidCallback? onTap,
     Color? titleColor,
   }) {
+    final itemColor = color ?? const Color(AppConstants.primaryInt);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       decoration: BoxDecoration(
@@ -472,11 +485,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.07), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: ListTile(
-        onTap: onTap,
+        onTap: onTap ?? (url != null ? () => _openUrl(url) : null),
         leading: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: color, size: 20),
+          decoration: BoxDecoration(color: itemColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, color: itemColor, size: 20),
         ),
         title: Text(
           title,
