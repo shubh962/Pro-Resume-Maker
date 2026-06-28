@@ -85,7 +85,9 @@ class NotificationService {
     // Get device's real IANA timezone — works for ALL countries
     // e.g. "Asia/Kolkata", "America/New_York", "Europe/London"
     try {
-      final String tzName = await FlutterTimezone.getLocalTimezone();
+      // flutter_timezone 5.x returns TimezoneInfo — use .name for IANA string
+      final tzInfo = await FlutterTimezone.getLocalTimezone();
+      final String tzName = tzInfo.identifier;
       tz.setLocalLocation(tz.getLocation(tzName));
     } catch (_) {
       // Fallback: calculate UTC offset manually so notification
