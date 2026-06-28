@@ -5,6 +5,7 @@ import 'home_screen.dart';
 import 'resume_data.dart';
 import 'app_constants.dart';
 import 'notification_service.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,8 @@ void main() async {
   await ResumeData().loadAllResumes();
   await NotificationService.instance.init();
   runApp(const ResumeMakerApp());
+  // DEV TEST — remove before production release
+  // await NotificationService.instance.testNow();
 }
 
 class ResumeMakerApp extends StatelessWidget {

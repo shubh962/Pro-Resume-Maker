@@ -8,7 +8,7 @@ class AppConstants {
 
   // ── APP INFO ──────────────────────────────────────────────────
   static const String appName        = 'Pro Resume Maker';
-  static const String appVersion     = '1.0.0';
+  static const String appVersion     = '1.0.3+5';
   static const String appPackageName = 'com.shubham.proresumemakerapp';
 
   // ── LEGAL LINKS ───────────────────────────────────────────────
@@ -21,8 +21,8 @@ class AppConstants {
 
   // ── SUPPORT & SOCIAL ──────────────────────────────────────────
   static const String supportEmail = 'Gautamshubham962@gmail.com';
-  static const String instagramUrl = 'https://www.instagram.com/m_just_shubham';    // TODO: replace if you have one
-  static const String twitterUrl   = 'https://x.com/Shubham_962';      // TODO: replace if you have one
+  static const String instagramUrl = 'https://www.instagram.com/m_just_shubham';
+  static const String twitterUrl   = 'https://x.com/Shubham_962';
 
   // ── APP COLORS ────────────────────────────────────────────────
   static const int primaryInt   = 0xFF4A00E0;

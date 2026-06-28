@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
@@ -199,6 +200,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
               canChangePageFormat: false,
               pdfFileName: _pdfFileName,
               allowPrinting: false,
+              allowSharing: false,
               actions: [
                 PdfPreviewAction(
                   icon: const Icon(Icons.print_rounded, color: Colors.white),
@@ -548,6 +550,22 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
           pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: cleaned.map((item) => _bulletRow(item, r, fontSize: fontSize)).toList()));
       }
+    }
+    // ── Signature section ─────────────────────────────────────────
+    if (section == 'Signature' && d.signature.isNotEmpty) {
+      final file = File(d.signature);
+      if (!file.existsSync()) return null;
+      final bytes = file.readAsBytesSync();
+      final image = pw.MemoryImage(bytes);
+      return _sBlock('SIGNATURE', accentColor, dividerColor, titleFontSize, b,
+        pw.Align(
+          alignment: pw.Alignment.centerLeft,
+          child: pw.Container(
+            height: 60,
+            width: 180,
+            child: pw.Image(image, fit: pw.BoxFit.contain),
+          ),
+        ));
     }
     return null;
   }
